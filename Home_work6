@@ -1,1 +1,42 @@
-Hw:
+Hw 6:
+
+--2. Пусть задан некоторый пользователь. 
+--Из всех друзей этого пользователя найдите человека, который больше всех общался с нашим пользователем.
+
+--User с ID 10 больше всего писал сообщений другу с ID to_user_id:
+select count(to_user_id) as cnt , to_user_id
+from message where to_user_id in 
+(select to_user_id from friend_request fr where from_user_id = 10
+UNION 
+select from_user_id from friend_request fr where to_user_id = 10) and 
+from_user_id = 10
+GROUP by to_user_id ORDER by cnt desc limit 1
+
+--User'у с ID 10 больше всего писал друг с ID from_user_id:
+select COUNT(from_user_id) as cnt, from_user_id from message where from_user_id in 
+(select to_user_id from friend_request fr where from_user_id = 10
+UNION 
+select from_user_id from friend_request fr where to_user_id = 10) and 
+to_user_id = 10 
+GROUP BY from_user_id ORDER by cnt desc limit 1
+--Есть чувство, что не правильно понял задачу) подскажите, пожалуйста, как бы Вы ее решили.
+
+
+--3. Подсчитать общее количество лайков, которые получили 10 самых молодых пользователей.
+select SUM(x.cnt) from 
+(SELECT COUNT(*) as cnt from profile p, `likes` l 
+where p.user_id = l.to_user_id group by p.user_id order by birthday desc limit 10) as x
+
+
+--4. Определить кто больше поставил лайков (всего) - мужчины или женщины?
+select x.gen from 
+(select count(gender) cnt, p.gender gen from `like` l, profile p where p.user_id = l.user_id 
+GROUP BY p.gender ORDER by cnt desc limit 1) x
+
+
+--5. Найти 10 пользователей, которые проявляют наименьшую активность в использовании социальной сети.
+select user_id, CONCAT(firstname, ' ', lastname), 
+(select count(*) from message where `message`.from_user_id = `profile`.user_id )+
+(select count(*) from `like` where `like`.user_id = `profile`.user_id )+
+(select count(*) from post where `post`.user_id = `profile`.user_id ) as factor
+from `profile` order by factor LIMIT 10
